@@ -11,16 +11,16 @@
 # usage: json-wrap [-k <name>|--key <name>] [<file.json> ... ]
 #
 # Reads Json from files, or stdin no files are specified,
-# and wraps each object, giving it a name specified by -k or --key.
+# and wraps each in an object; it's key specified by -k or --key.
 #
 # If -k or --key is not specified, the key is generated
 # from the basename of the file, excluding any '.json' extension.
 #
-# The objects are printed sequentially to stdout.
+# The objects are printed successively to stdout.
 #
-# Note that if objects are being read by stdin, then the
-# automatically- generated key will be "<stdin>", or possibly
-# a number representing a file descriptor
+# Note that if objects are being read by stdin their
+# automatically-generated keys will be either "<stdin>"
+# or a number representing a file descriptor
 #
 #
 # Requires `jq` which does the heavy lifting.
@@ -47,11 +47,16 @@ esac
 done
 
 jq "${opts[@]}" '
-{
-	(
-		$ARGS.named.key? //
-		input_filename |
-		capture("(.*/)?(?<basename>.*?)(\\.json)?$").basename
-	): .
-}
+	{
+		(
+			$ARGS.named.key?
+			// (
+				input_filename
+				|
+				capture(
+					"(.*/)?(?<basename>.*?)(\\.json)?$"
+				).basename
+			)
+		): .
+	}
 ' "$@"

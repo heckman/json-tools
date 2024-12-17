@@ -49,16 +49,40 @@ esac
 done
 
 jq "${opts[@]}" '
-	if ($ARGS.positional|length>0) then
-		( $ARGS.positional | join("|") | "^("+.+")$" ) as $pattern
-		| env | with_entries (
+	if ( $ARGS.positional | length == 0 )
+
+	then  # use all the environment variables
+
+		env
+
+	else  # filter the environment variables
+
+		$ARGS.positional
+		|
+		join("|")     # join patterns with "or"
+		|
+		"^("+.+")$"   # anchor patterns at both ends of string
+
+		as $pattern
+		|
+		env | with_entries(
 			select( .key | test($pattern) )
 		)
-	else
-		env
+
 	end
+
 	|
-	if $ARGS.named.key? then . as $item | { ($ARGS.named.key): $item }
-	else .
+
+	if $ARGS.named.key?
+
+	then  # wrap the variables in a named object
+
+		{ ($ARGS.named.key): . }
+
+	else  # return filtered env object as it is
+
+		.
+
 	end
+
 ' --args "$@"

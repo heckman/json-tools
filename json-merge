@@ -37,6 +37,10 @@ do case ${1:-} in
 esac
 done
 
-jq --null-input 'reduce inputs as $item ({}; . '"$operator"' $item)' "$@"
+jq --null-input '
+	reduce inputs as $item (
+		{}; . '"$operator"' $item
+	)
+' "$@"
 
 

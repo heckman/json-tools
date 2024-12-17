@@ -40,11 +40,20 @@ esac
 done
 
 jq '
-{
-	(
-		$ARGS.named.key? //
-		input_filename |
-		capture("(.*/)?(?<basename>.*?)(\\.json)?$").basename
-	): .
-}
-' "$@" | jq --null-input 'reduce inputs as $item ({}; . '"$operator"' $item)'
+	{
+		(
+			$ARGS.named.key?
+			// (
+				input_filename
+				|
+				capture(
+					"(.*/)?(?<basename>.*?)(\\.json)?$"
+				).basename
+			)
+		): .
+	}
+' "$@" | jq --null-input '
+	reduce inputs as $item (
+		{}; . '"$operator"' $item
+	)
+'

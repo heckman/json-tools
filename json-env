@@ -1,0 +1,58 @@
+#!/usr/bin/env zsh
+# Copyright 2024 Erik Ben Heckman <erik@heckman.ca>
+# SPDX-License-Identifier: MIT
+
+
+# json-env v0.1
+
+
+# generate json from ENV vars
+#
+# usage: json-env [pattern]
+#
+# writes environment variables to stdout as json
+# if pattern is specified, only variables matching it will be included
+
+help() { awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
+version() { awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
+
+case ${1:-} in
+	-h|--help) help; exit ;;
+	-v|--version) version; exit ;;
+	--)
+		shift ;;
+esac
+
+awk_program='$1 ~ '"${(qqq)1:-}"'{printf("%s: env.%s, ",$1,$1)}'
+gnu_awk=$(
+	for awk in awk gawk
+	do
+		$awk --version 2>/dev/null | grep -q GNU && {
+			which $awk
+			break
+		}
+	done
+)
+
+if [[ -n $gnu_awk ]]
+then
+	# GNU awk can handle null characters
+	jq -n "{ $(
+		env -0 |
+		$gnu_awk -F= -v RS='\0' $awk_program |
+		sed 's/, $//'
+	) }"
+else
+	# fall back to the one true awk, or other non-gnu awk
+	#
+	# This method the RS character (record separator, ASCII 30)
+	# as a delimiter; bad things will happen if this character occurs in
+	# any environment variable name or value.
+	#
+	jq -n "{ $(
+		env -0 |
+		tr '\0' '\036' |
+		awk -F= -v RS=$'\036' $awk_program |
+		sed 's/, $//'
+	) }"
+fi

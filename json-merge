@@ -1,0 +1,31 @@
+#!/usr/bin/env zsh
+# Copyright 2024 Erik Ben Heckman <erik@heckman.ca>
+# SPDX-License-Identifier: MIT
+
+
+# json-merge v0.1
+
+
+# merges json files
+#
+# usage: json-merge <file.json> ...
+#
+# Writes json to stdout
+# with the properties of the first file
+# overwritten by the properties of subsequent files
+#
+# Requires `jq` which does the heavy lifting
+
+help() { awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
+version() { awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
+
+case ${1:-} in
+	-h|--help) help; exit ;;
+	-v|--version) version; exit ;;
+	--)
+		shift ;;
+esac
+
+jq --null-input 'reduce inputs as $i ({}; . * $i)' "$@"
+
+

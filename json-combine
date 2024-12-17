@@ -1,0 +1,35 @@
+#!/usr/bin/env zsh
+# Copyright 2024 Erik Ben Heckman <erik@heckman.ca>
+# SPDX-License-Identifier: MIT
+
+
+# json-combine v0.1
+
+
+# combines json files
+#
+# usage: json-combine <file.json> ...
+#
+# Writes json to stdout
+# where the root is a parent to
+# an object for each contributing file,
+# with the name of the file (sans directories and extension)
+# and containing the contents of the file.
+#
+# Assumes each file contains is a valid json object
+#
+# Behaviour is undefined when
+# names of contributing files are not unique.
+#
+# Requires `jq` which does the heavy lifting
+
+if $# -eq 0
+then
+	print '{}'
+else
+	jq --slurp "{$(
+		indices=({0..$#})
+		printf '%s: .[%s], ' ${${(qqq)@:r:t}:^indices} | sed 's/, $//'
+	)}" "$@"
+fi
+

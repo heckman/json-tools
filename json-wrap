@@ -1,0 +1,42 @@
+#!/usr/bin/env zsh
+# Copyright 2024 Erik Ben Heckman <erik@heckman.ca>
+# SPDX-License-Identifier: MIT
+
+
+# json-wrap v0.1
+
+
+# wraps json in a top level object or array
+
+# usage: json-wrap <name> [<file.json> ... ]
+#
+# Wraps provided json objects and outputs resulting json to stdout.
+#
+# Reads object(s) from stdin if no files are specified.
+#
+# If one object is provided it is wrapped in
+# a top level object named <name>.
+#
+# If more than one object is provided, they are wrapped in
+# an array named <name>.
+#
+# If no objects are provided, the resultant json
+# will contain an empty array named <name>.
+#
+# Requires `jq` which does the heavy lifting.
+#
+
+help() { awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
+version() { awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
+
+case ${1:-} in
+	-h|--help|) help; exit ;;
+	-v|--version) version; exit ;;
+	--)
+		shift ;&
+	*)
+		key=${1:-}
+		shift 2> /dev/null|| { help; exit } ;;
+esac
+
+jq --slurp "if length == 1 then .[0] else . end | { ${(qqq)key}: .  }" "$@"

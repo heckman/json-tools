@@ -1,0 +1,43 @@
+#!/usr/bin/env zsh
+# Copyright 2023 Erik Ben Heckman <erik@heckman.ca>
+# SPDX-License-Identifier: MIT
+
+
+# json v0.1
+
+
+# launch a json utility
+
+# usage: json <subcommand> [args]
+
+# This is nothing more than a wrapper for utilities that start with "json-",
+# which can be anywhere on the PATH.
+#
+
+usage(){
+	echo "usage: json <subcommand> [args]"
+	echo
+	echo "where subcommand is one of: "
+	find "${(@)path}" -iname "json-*" 2>/dev/null -print0 |
+		xargs -0 basename |
+		sed 's/^json-/  /'
+	echo
+	echo "for help with a subcommand, try"
+	echo "json <subcommand> --help"
+	echo
+}
+
+if  (( $+commands[json-$1] ))
+then
+	exec "json-$1" "${@:2}" 2> >(
+		sed "s/json-$1/json $1/" >&2
+	)
+else
+	if [[ $# -eq 0 ]]
+	then echo "No subcommand specified." >&2
+	else echo "Can't find subcommand '$1'." >&2
+	fi
+	echo >&2
+	usage >&2
+	exit 7
+fi

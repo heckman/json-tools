@@ -3,32 +3,47 @@
 # SPDX-License-Identifier: MIT
 
 
-# json-env v0.3
+# json-env v0.4
 
 
-# generate json from ENV vars
-#
+# generate json from environment vars
+
 # usage: json-env [pattern]
 #
-# writes environment variables to stdout as json
-# if pattern is specified, only variables matching it will be included
+# Writes environment variables to stdout as json.
+# If pattern is specified, only variables matching it will be included.
+#
+# Pattern is a "Perl with Named Groups" regular expression.
+# See: https://jqlang.github.io/jq/manual/#regular-expressions
+#
+#
+# Requires `jq` which does the heavy lifting
 #
 
-help() { awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
-version() { awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
+help() { >&2 awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
+version() { >&2 awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
 
-case ${1:-} in
-	-h|--help) help; exit ;;
+while [[ ${1:-} = -* ]]
+do case ${1:-} in
+	-h|--help|) help; exit ;;
 	-v|--version) version; exit ;;
-	--)
-		shift ;;
+	-w|--wrap) key='env'; shift ;;
+		-k|--key)
+		shift
+		opts=(--arg key $1)
+		shift 2>/dev/null || {
+			echo 'Error: missing key. Use -h or --help for usage.'>&2
+			exit 1
+		} ;;
+	--) shift; break ;;
+	-*) break ;; # unrecognized options assumed to be positional arguments
 esac
+done
+opts=(--arg pattern "$*")
 
-jq -n '
-	env | with_entries (
-		if .key | test("'$1'")
-		then {key: .key, value: .value}
-		else empty
-		end
+jq -n "${opts[@]}" '
+	env |
+	with_entries (
+		select( .key | test($pattern) )
 	)
 '

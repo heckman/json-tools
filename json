@@ -13,16 +13,33 @@
 # This is nothing more than a wrapper for utilities that start with "json-",
 # which can be anywhere on the PATH.
 #
+# Subcommands should have the following header comment format:
+# the name of the program should be on the first comment line after blank lines
+# (comments before the first blank line are ignored)
+# a short description should be on the next comment line
+# this script is an example of this format
 
 usage(){
 	echo "usage: json <subcommand> [args]"
 	echo
 	echo "where subcommand is one of: "
-	find "${(@)path}" -iname "json-*" 2>/dev/null -print0 |
-		xargs -0 basename |
-		sed 's/^json-/  /'
+	find "${(@)path}" -iname 'json-*' 2>/dev/null -exec awk '
+			/^ *$/{ f=1 }
+			f==0{ next } # skip until we see a blank line
+			/^ *#/{
+				if(subcommand==""){
+					sub("^ *# *json-","")
+					subcommand=$1
+				}else{
+					sub("^ *# *","")
+					printf("%12s : %s\n",subcommand,$0)
+					exit
+				}
+			}
+		' "{}" \;
+	# issue: shadowed commands will show up here.
 	echo
-	echo "for help with a subcommand, try"
+	echo "for help using a subcommand, try"
 	echo "json <subcommand> --help"
 	echo
 }
@@ -34,10 +51,15 @@ then
 	)
 else
 	if [[ $# -eq 0 ]]
-	then echo "No subcommand specified." >&2
-	else echo "Can't find subcommand '$1'." >&2
+	then
+		echo "Error: No subcommand specified." >&2
+		exit_code=64;
+	elif [[ $1 != '--help' && $1 != '-h' ]]
+	then
+		echo "Error: Can't find subcommand '$1'." >&2
+		exit_code=69;
 	fi
 	echo >&2
 	usage >&2
-	exit 7
+	exit ${exit_code:-0}
 fi

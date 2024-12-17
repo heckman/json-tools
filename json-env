@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 
-# json-env v0.2
+# json-env v0.3
 
 
 # generate json from ENV vars
@@ -13,15 +13,6 @@
 # writes environment variables to stdout as json
 # if pattern is specified, only variables matching it will be included
 #
-# if gnu awk is available, the null character is used as s delimiter
-# if it is not available, another version of awk will be used
-# which might not support null characters, another character will be used,
-# in which case the program will fail if the character
-# is present in an environment variable name or value.
-# Currently the character being used when gawk is not available is
-# the FS character (file separator, ASCII 28, octal \034)
-delimiter='\034'
-
 
 help() { awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
 version() { awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
@@ -33,31 +24,11 @@ case ${1:-} in
 		shift ;;
 esac
 
-awk_program='$1 ~ '"${(qqq)1:-}"'{printf("%s%s: env.%s",D,$1,$1);D=", "}'
-gnu_awk=$(
-	for awk in awk gawk
-	do
-		$awk --version 2>/dev/null | grep -q GNU && {
-			which $awk
-			break
-		}
-	done
-)
-
-if [[ -n $gnu_awk ]]
-then
-	# GNU awk can handle null characters
-	jq -n "{ $(
-		env -0 |
-		$gnu_awk -F= -v RS='\0' $awk_program
-	) }"
-else
-	# fall back to the one true awk, or other non-gnu awk
-	# that we can't count on to handle null characters
-	#
-	jq -n "{ $(
-		env -0 |
-		tr '\0' "$delimiter" |
-		awk -F= -v RS="$delimiter" $awk_program
-	) }"
-fi
+jq -n '
+	env | with_entries (
+		if .key | test("'$1'")
+		then {key: .key, value: .value}
+		else empty
+		end
+	)
+'

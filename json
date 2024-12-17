@@ -25,7 +25,7 @@ usage(){
 	echo "usage: json <subcommand> [args]"
 	echo
 	echo "where subcommand is one of: "
-	find "${(@)path}" -iname 'json-*' 2>/dev/null |
+	find "${(@)path}" -name 'json-*' 2>/dev/null |
 		xargs basename |
 		sort --unique |
 		xargs which |

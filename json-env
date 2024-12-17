@@ -8,7 +8,7 @@
 
 # generate json from environment vars
 
-# usage: json-env [OPTIONS] [pattern] ...
+# usage: json-env [-k <name>|--key <name>|-w|--wrap] [pattern] ...
 #
 # Writes environment variables to stdout as a json object.
 #

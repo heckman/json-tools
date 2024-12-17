@@ -14,16 +14,22 @@
 # which can be anywhere on the PATH.
 #
 # Subcommands should have the following header comment format:
-# the name of the program should be on the first comment line after blank lines
-# (comments before the first blank line are ignored)
-# a short description should be on the next comment line
-# this script is an example of this format
+# - The name of the program should be on the first comment line after blank lines.
+#   (Comments before the first blank line are ignored.)
+# - A short description should be on the next comment line.
+# This script is an example of this format
+#
+# Subcommands cannot have spaces, tabs, or newlines in their names.
 
 usage(){
 	echo "usage: json <subcommand> [args]"
 	echo
 	echo "where subcommand is one of: "
-	find "${(@)path}" -iname 'json-*' 2>/dev/null -exec awk '
+	find "${(@)path}" -iname 'json-*' 2>/dev/null |
+		xargs basename |
+		sort --unique |
+		xargs which |
+		xargs --max-args=1 awk '
 			/^ *$/{ f=1 }
 			f==0{ next } # skip until we see a blank line
 			/^ *#/{
@@ -36,8 +42,7 @@ usage(){
 					exit
 				}
 			}
-		' "{}" \;
-	# issue: shadowed commands will show up here.
+		'
 	echo
 	echo "for help using a subcommand, try"
 	echo "json <subcommand> --help"

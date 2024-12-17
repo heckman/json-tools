@@ -3,33 +3,48 @@
 # SPDX-License-Identifier: MIT
 
 
-# json-combine v0.1
+# json-combine v0.2
 
 
-# combines json files
-#
+# combine json files
+
 # usage: json-combine <file.json> ...
 #
-# Writes json to stdout
-# where the root is a parent to
-# an object for each contributing file,
-# with the name of the file (sans directories and extension)
-# and containing the contents of the file.
+# Wraps incoming json in an object named for the filename that contains it
+# (its basename, minusing any '.json' extension) and then combines them.
+# Subsequent objects will overwrite previous ones of the same name,
+# unless -r or --recursive is specified, in which case the objects
+# are merged recursively.
 #
-# Assumes each file contains is a valid json object
-#
-# Behaviour is undefined when
-# names of contributing files are not unique.
 #
 # Requires `jq` which does the heavy lifting
+#
+# For examples of recursive merging see:
+# https://jqlang.github.io/jq/manual/#multiplication-division-modulo
+#
 
-if $# -eq 0
-then
-	print '{}'
-else
-	jq --slurp "{$(
-		indices=({0..$#})
-		printf '%s: .[%s], ' ${${(qqq)@:r:t}:^indices} | sed 's/, $//'
-	)}" "$@"
-fi
+help() { >&2 awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
+version() { >&2 awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
 
+# default is to merge non-recursively
+operator='+'
+
+while [[ ${1:-} = -* ]]
+do case ${1:-} in
+	-h|--help) help; exit ;;
+	-v|--version) version; exit ;;
+	-r|--recurse|--recursive) operator='*'; shift ;;
+	--) shift; break ;;
+	-*) break ;; # unrecognized options assumed to be positional arguments
+esac
+done
+
+jq '
+{
+	(
+		$ARGS.named.key? //
+		input_filename |
+		capture("(.*/)?(?<basename>.*?)(\\.json)?$").basename
+	): .
+}
+' "$@" | jq --null-input 'reduce inputs as $item ({}; . '"$operator"' $item)'

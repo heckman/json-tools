@@ -8,14 +8,20 @@
 
 # generate json from environment vars
 
-# usage: json-env [-w|--wrap|-k <name>|--key <name>] [pattern]
+# usage: json-env [OPTIONS] [pattern]
+#        json-env [OPTIONS] [-f|--fixed] varname [varname] ...
+#        json-env [OPTIONS] varname varname [varname] ...
 #
 # Writes environment variables to stdout as a json object.
 # If pattern is specified, only variables matching it will be included.
 #
-# -k or --key will wrap the variables in an object with the specified name.
+# With -f or --fixed, the object will include only the specified variables.
+# If two "patterns" are specified, they will be interpreted as fixed names.
 #
-# -w and --wrap are shortcuts for --key env
+# OPTIONS:
+#   -k or --key will wrap the variables in an object with the specified name.
+#   -w and --wrap are shortcuts for --key env
+#
 #
 # Pattern is a "Perl with Named Groups" regular expression.
 # See: https://jqlang.github.io/jq/manual/#regular-expressions
@@ -27,14 +33,17 @@
 help() { >&2 awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
 version() { >&2 awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
 
+opts=(-n)
 while [[ ${1:-} = -* ]]
 do case ${1:-} in
 	-h|--help|) help; exit ;;
 	-v|--version) version; exit ;;
-	-w|--wrap) opts=(--arg key "env"); shift ;;
+	-r|--raw) opts+=(--arg raw true); shift ;;
+	-f|--fixed) opts+=(--arg fixed true); shift ;;
+	-w|--wrap) opts+=(--arg key "env"); shift ;;
 	-k|--key)
 		shift
-		opts=(--arg key $1)
+		opts+=(--arg key $1)
 		shift 2>/dev/null || {
 			echo 'Error: missing key. Use -h or --help for usage.'>&2
 			exit 1
@@ -43,11 +52,19 @@ do case ${1:-} in
 	-*) break ;; # unrecognized options assumed to be positional arguments
 esac
 done
+[[ $# -gt 1 ]] && opts+=(--arg fixed true)
 opts+=(--arg pattern "$*")
 
-jq -n "${opts[@]}" '
+jq "${opts[@]}" '
 	env |
-	with_entries (
-		select( .key | test($pattern) )
-	) | if $ARGS.named.key? then . as $item | { ($ARGS.named.key): $item } else . end
+	if $ARGS.named.fixed? then (
+		($pattern | split(" ")) as $envvars |
+		with_entries(
+			select(.key as $k | $envvars | index($k) )
+		)
+	) else (
+		with_entries (
+			select( .key | test($pattern) )
+		)
+	) end | if $ARGS.named.key? then . as $item | { ($ARGS.named.key): $item } else . end
 '

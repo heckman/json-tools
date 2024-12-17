@@ -3,29 +3,40 @@
 # SPDX-License-Identifier: MIT
 
 
-# json-merge v0.1
+# json-merge v0.2
 
 
-# merges json files
+# merge json objects
+
+# usage: json-merge [-r|--recursive] <file.json> ...
 #
-# usage: json-merge <file.json> ...
+# Writes merged json to stdout. Subsequent properties will overwrite previous
+# ones of the same name, unless -r or --recursive is specified, in which case
+# conflicting objects will be merged recursively.
 #
-# Writes json to stdout
-# with the properties of the first file
-# overwritten by the properties of subsequent files
 #
 # Requires `jq` which does the heavy lifting
+#
+# For examples of recursive merging see:
+# https://jqlang.github.io/jq/manual/#multiplication-division-modulo
+#
 
-help() { awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
-version() { awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
+help() { >&2 awk '/^ *[^#]/{exit}NR>1{print substr($0,2)}' $ZSH_ARGZERO; }
+version() { >&2 awk '$0~'"${(qqq)ZSH_ARGZERO:A:t}"'{print substr($0,2);exit}' $ZSH_ARGZERO; }
 
-case ${1:-} in
+# default is to merge non-recursively
+operator='+'
+
+while [[ ${1:-} = -* ]]
+do case ${1:-} in
 	-h|--help) help; exit ;;
 	-v|--version) version; exit ;;
-	--)
-		shift ;;
+	-r|--recurse|--recursive) operator='*'; shift ;;
+	--) shift; break ;;
+	-*) break ;; # unrecognized options assumed to be positional arguments
 esac
+done
 
-jq --null-input 'reduce inputs as $i ({}; . * $i)' "$@"
+jq --null-input 'reduce inputs as $item ({}; . '"$operator"' $item)' "$@"
 
 

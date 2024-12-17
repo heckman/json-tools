@@ -8,15 +8,12 @@
 
 # generate json from environment vars
 
-# usage: json-env [OPTIONS] [pattern]
-#        json-env [OPTIONS] [-f|--fixed] varname [varname] ...
-#        json-env [OPTIONS] varname varname [varname] ...
+# usage: json-env [OPTIONS] [pattern] ...
 #
 # Writes environment variables to stdout as a json object.
-# If pattern is specified, only variables matching it will be included.
 #
-# With -f or --fixed, the object will include only the specified variables.
-# If two "patterns" are specified, they will be interpreted as fixed names.
+# If pattern is specified, only variables it matches entirely will be included.
+# (I.e. the expression is wrapped in ^$ to match the entire variable name.)
 #
 # OPTIONS:
 #   -k or --key will wrap the variables in an object with the specified name.
@@ -38,8 +35,6 @@ while [[ ${1:-} = -* ]]
 do case ${1:-} in
 	-h|--help|) help; exit ;;
 	-v|--version) version; exit ;;
-	-r|--raw) opts+=(--arg raw true); shift ;;
-	-f|--fixed) opts+=(--arg fixed true); shift ;;
 	-w|--wrap) opts+=(--arg key "env"); shift ;;
 	-k|--key)
 		shift
@@ -52,19 +47,18 @@ do case ${1:-} in
 	-*) break ;; # unrecognized options assumed to be positional arguments
 esac
 done
-[[ $# -gt 1 ]] && opts+=(--arg fixed true)
-opts+=(--arg pattern "$*")
 
 jq "${opts[@]}" '
-	env |
-	if $ARGS.named.fixed? then (
-		($pattern | split(" ")) as $envvars |
-		with_entries(
-			select(.key as $k | $envvars | index($k) )
-		)
-	) else (
-		with_entries (
+	if ($ARGS.positional|length>0) then
+		( $ARGS.positional | join("|") | "^("+.+")$" ) as $pattern
+		| env | with_entries (
 			select( .key | test($pattern) )
 		)
-	) end | if $ARGS.named.key? then . as $item | { ($ARGS.named.key): $item } else . end
-'
+	else
+		env
+	end
+	|
+	if $ARGS.named.key? then . as $item | { ($ARGS.named.key): $item }
+	else .
+	end
+' --args "$@"

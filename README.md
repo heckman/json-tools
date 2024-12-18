@@ -22,7 +22,7 @@ at the moment I'm hesitant to have [**_jq_**](https://github.com/jqlang/jq) do t
 
 ## Installation
 
-The scripts are ready to execute.
+The scripts can be found in the `bin` directory; they are ready to execute.
 If you put them on your path than the launcher `json` will be able to find them.
 
 The scripts have three dependencies:

@@ -57,12 +57,13 @@ jq "${opts[@]}" '
 
 	else  # filter the environment variables
 
-		$ARGS.positional
-		|
-		join("|")     # join patterns with "or"
-		|
-		"^("+.+")$"   # anchor patterns at both ends of string
-
+		(
+			$ARGS.positional
+			|
+			join("|")     # join patterns with "or"
+			|
+			"^("+.+")$"   # anchor patterns at both ends of string
+		)
 		as $pattern
 		|
 		env | with_entries(

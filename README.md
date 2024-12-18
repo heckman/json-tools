@@ -1,37 +1,50 @@
 # json-tools
 
-A few simple scripts wrapping `jq` pipelines
+A few simple scripts wrapping [**_jq_**](https://github.com/jqlang/jq) pipelines
 that perform common json-manipulation tasks.
 
-- `json-combine`: combine json files
-- `json-env`: generate json from environment vars
-- `json-merge`: merge json objects
-- `json-wrap`: wrap json in a top-level object
+- **json-combine**: combine json files
+- **json-env**: generate json from environment vars
+- **json-merge**: merge json objects
+- **json-wrap**: wrap json in a top-level object
 
-In addition, there is a launcher script `json`
+In addition, there is a launcher script **json**
 that launches any command on the path that begins with `json-`.
 
+> [!Warning]
+>
+> These scripts are a work in progress and scnatily tested.
+> Use them at your own risk.
 
+I use these scripts. They are also a way for me to learn more about [**_jq_**](https://github.com/jqlang/jq).
+I'm incrementally moving the logic from the shell wrappers into the jq pipelines, but
+at the moment I'm hesitant to have [**_jq_**](https://github.com/jqlang/jq) do the argument-parsing.
 
 ## Installation
 
-These scripts have two dependencies:
+The scripts are ready to execute.
+If you put them on your path than the launcher `json` will be able to find them.
 
-- `jq` which does all the actual work.
-- `awk` which generates usage and version text. (Any flavour should do.)
+The scripts have three dependencies:
 
-The `json` script isn't actually required—the other scripts can be run directly.
+- **_zsh_** in which the scripts are written.
+- **_jq_** which does all the actual work.
+- **_awk_** which generates usage and version text. (Any flavour should do.)
+
+The **json** script isn't actually required—the other scripts can be run directly.
 (But who wants to type `json-env` when you can type `json env`? Much more fun.)
-
-
 
 ## Usage examples
 
-Most of these commands expect json files as arguments. In these examples I'm invoking the commands from the `zsh` shell using a combination of here strings and process substitution in lieu of files.
+Most of these commands expect json files as arguments. In these examples I'm invoking the commands from the _zsh_ shell using a combination of here strings and process substitution in lieu of files.
 
 These are simple examples. Use the `--help` option for each command to discover all available options.
 
-### json combine
+### json
+
+This is a launcher. Use `json --help` to list the other scripts. Invoke the other scripts as `json combine`, etc.. (That's right, you get to type a space instead of a space!)
+
+### json-combine
 
 `json combine <(<<<'{"foo":"bar"}') <(<<<42)` produces:
 
@@ -40,7 +53,7 @@ These are simple examples. Use the `--help` option for each command to discover 
   "11": {
     "foo": "bar"
   },
-"12": 42
+  "12": 42
 }
 ```
 
@@ -50,7 +63,7 @@ These are simple examples. Use the `--help` option for each command to discover 
 
 ### json-wrap
 
-This is the similar to `json combine` with a single argument, although it also provides an option to specify the name of the enclosing object. `json wrap --key foo <(<<<'{"bar":"baz"}') <(<<<'"qux"')`  produces:
+This is the similar to `json combine` with a single argument, although it also provides an option to specify the name of the enclosing object. `json wrap --key foo <(<<<'{"bar":"baz"}') <(<<<'"qux"')` produces:
 
 ```json
 {
@@ -76,7 +89,7 @@ It's worth noting that this will output an object for each input, printed succes
 }
 ```
 
-### json env
+### json-env
 
 This one doesn't expect files as arguments, instead it expects patterns to match against environment variable names. On my machine, `json env PAGER 'HOME.*'` produces:
 
@@ -89,4 +102,3 @@ This one doesn't expect files as arguments, instead it expects patterns to match
   "HOME": "/Users/erik"
 }
 ```
-

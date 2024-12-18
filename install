@@ -1,0 +1,22 @@
+#!/usr/bin/env zsh
+
+GIT_ROOT="$(git rev-parse --show-toplevel)"
+
+# Safety dance
+[[
+	$USER == "erik" &&
+	$ITERM_PROFILE == 'domo' &&
+	$GIT_ROOT == /Users/erik/dev/*
+]] || {
+	echo "Modify this install script as required.">&2
+	exit 1
+}
+
+# This is a very personal decision
+destination="$HOME/bin"
+
+# I figure naming the files specifically makes things a degree safer
+bins=( json json-combine json-env json-merge json-wrap )
+
+cd "$ROOT/bin"
+cp "${bins[@]}" "$destination"

@@ -25,6 +25,9 @@ at the moment I'm hesitant to have [**_jq_**](https://github.com/jqlang/jq) do t
 The scripts can be found in the `bin` directory; they are ready to execute.
 If you put them on your path than the launcher `json` will be able to find them.
 
+I've written a script `install` that works for me;
+if you want to use it be sure to edit it first to suit your own needs.
+
 The scripts have three dependencies:
 
 - **_zsh_** in which the scripts are written.

@@ -1,12 +1,12 @@
 #!/usr/bin/env zsh
 # Copyright 2024 Erik Ben Heckman <erik@heckman.ca>
-# SPDX-License-Identifier: MIT
+# https://git.heckman.ca/json-tools   SPDX-License-Identifier: MIT
 
 
-# json-env v0.4
+#  json-env v0.4
 
 
-# generate json from environment vars
+# Generate json from environment vars
 
 # usage: json-env [-k <name>|--key <name>|-w|--wrap] [pattern] ...
 #

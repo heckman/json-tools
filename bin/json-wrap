@@ -1,12 +1,12 @@
 #!/usr/bin/env zsh
 # Copyright 2024 Erik Ben Heckman <erik@heckman.ca>
-# SPDX-License-Identifier: MIT
+# https://git.heckman.ca/json-tools   SPDX-License-Identifier: MIT
 
 
-# json-wrap v0.2
+#  json-wrap  v0.2
 
 
-# wrap json in a top-level object
+# Wrap json in a top-level object
 
 # usage: json-wrap [-k <name>|--key <name>] [<file.json> ... ]
 #

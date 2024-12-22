@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: MIT
 
 
-# json v0.1
+#  json v0.1
 
 
-# launch a json utility
+# Launch a json utility
 
-# usage: json <subcommand> [args]
-
+# Usage: json <subcommand> [args]
+#
 # This is nothing more than a wrapper for utilities that start with "json-",
 # which can be anywhere on the PATH.
 #

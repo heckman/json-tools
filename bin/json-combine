@@ -1,14 +1,14 @@
 #!/usr/bin/env zsh
 # Copyright 2024 Erik Ben Heckman <erik@heckman.ca>
-# SPDX-License-Identifier: MIT
+# https://git.heckman.ca/json-tools   SPDX-License-Identifier: MIT
 
 
-# json-combine v0.2
+#  json-combine  v0.2
 
 
-# combine json files
+# Combine json files
 
-# usage: json-combine <file.json> ...
+# Usage: json-combine <file.json> ...
 #
 # Wraps incoming json in an object named for the filename that contains it
 # (its basename, minusing any '.json' extension) and then combines them.
